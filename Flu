@@ -25,7 +25,7 @@ select pat.birthdate
 	  ,pat.first
 	  ,pat.last
 	  ,pat.gender
-	  ,extract(YEAR FROM age('12-31-2022', birthdate)) as age
+	  ,TIMESTAMPDIFF(YEAR, birthdate, '2022-12-31') AS age
 	  ,flu.earliest_flu_shot_2022
 	  ,flu.patient
 	  ,case when flu.patient is not null then 1 
