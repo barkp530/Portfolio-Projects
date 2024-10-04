@@ -1,38 +1,30 @@
-with active_patients as
+WITH active_patients AS
 (
-	select distinct patient
-	from encounters as e
-	join patients as pat
-	  on e.patient = pat.id
-	where start between '2020-01-01 00:00' and '2022-12-31 23:59'
-	  and pat.deathdate is null
-	  and TIMESTAMPDIFF(MONTH, pat.BIRTHDATE, '2022-12-31') >= 6
+    SELECT DISTINCT e.PATIENT
+    FROM cleaned_encounter AS e
+    JOIN cleaned_patients AS pat
+    ON e.PATIENT = pat.Id
+    WHERE e.start BETWEEN '2020-01-01' AND '2022-12-31'  
+    AND pat.DEATHDATE is NULL
+    AND TIMESTAMPDIFF(MONTH, pat.BIRTHDATE, '2022-12-31') >= 6
 ),
 
-flu_shot_2022 as
+flu_shot_2022 AS 
 (
-select patient, min(date) as earliest_flu_shot_2022 
-from immunizations
-where code = '5302'
-  and date between '2022-01-01 00:00' and '2022-12-31 23:59'
-group by patient
+    SELECT patient, MIN(`DATE`) AS earliest_flu_shot_2022
+    FROM cleaned_immunizations
+    WHERE code = '5302' 
+    AND `DATE` BETWEEN '2022-01-01' AND '2022-12-31'
+    GROUP BY patient
 )
 
-select pat.birthdate
-      ,pat.race
-	  ,pat.county
-	  ,pat.id
-	  ,pat.first
-	  ,pat.last
-	  ,pat.gender
-	  ,TIMESTAMPDIFF(YEAR, birthdate, '2022-12-31') AS age
-	  ,flu.earliest_flu_shot_2022
-	  ,flu.patient
-	  ,case when flu.patient is not null then 1 
-	   else 0
-	   end as flu_shot_2022
-from patients as pat
-left join flu_shot_2022 as flu
-  on pat.id = flu.patient
-where 1=1
-  and pat.id in (select patient from active_patients)
+SELECT pat.BIRTHDATE, pat.RACE, pat.COUNTY, pat.Id, pat.FIRST, pat.LAST, 
+    flu.earliest_flu_shot_2022,
+    CASE WHEN flu.patient IS NOT NULL THEN 1 ELSE 0 END AS flu_shot_2022
+FROM cleaned_patients AS pat
+LEFT JOIN flu_shot_2022 AS flu
+ON pat.ID = flu.patient
+WHERE 1=1
+AND pat.Id IN (SELECT patient FROM active_patients);  -- Added alias for subquery
+
+
